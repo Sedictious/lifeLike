@@ -1,0 +1,11 @@
+{
+  "type": "model",
+  "uid": "lifeLike",
+  "title": "Life-like automata",
+  "version": 1,
+  "author": "Eleftheria Chatziargyriou",
+  "description": "This implements life-like cellular automata.",
+  "supportedGraphs": ["squareGrid"],
+  "pluginAttributesScope": [ {"rules": "string"} ],
+  "nodeAttributesScope": [ {"live": "bool"} ]
+}
