@@ -2,11 +2,11 @@
 
 ## What is it?
 
-This is a model plugin for [Evoplex](https://evoplex.org) and is included by default in the software.
+This is a model plugin for [Evoplex](https://evoplex.org).
 
-It let's you define any valid [Life-like rules](https://en.wikipedia.org/wiki/Life-like_cellular_automaton).
+It lets you define any [life-like cellular automaton](https://en.wikipedia.org/wiki/Life-like_cellular_automaton).
 
-## Rules
+## Rules Notation
 
 The model uses the usual B/S notation, where B and S represent the number of neighbors required for birth and survival respectively.
 
@@ -18,7 +18,7 @@ Likewise, an active cell will survive if it has either 2 or 3 live neighbors and
 
 ## Examples
 
-The figure below shows a screenshot of an experiment in Evoplex using this model.
+The figure below shows an experiment implementing the Replicator plugin.
 
 <p align="center">
 <img src="example.gif" alt="Example" width="70%">
