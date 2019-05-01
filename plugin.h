@@ -9,6 +9,8 @@
 #ifndef LIFELIKE_H
 #define LIFELIKE_H
 
+#include <QBitArray>
+ 
 #include <plugininterface.h>
 
 namespace evoplex {
@@ -17,12 +19,12 @@ class LifeLike: public AbstractModel
 public:
     bool init() override;
     bool algorithmStep() override;
-    QStringList parseCmd(const QString &cmd);
+    QBitArray parseCmd(const QString &cmd);
 
 private:
     int m_liveAttrId;  // the id of the 'live' node's attribute
     QString m_ruleset; // the model's ruleset (B/S format)
-    QStringList m_rulesetLst;
+    QBitArray m_rulesetLst; // the bitstream representing the input ruleset
 };
 } // evoplex
 #endif // LIFELIKE_H

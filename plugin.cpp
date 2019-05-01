@@ -10,14 +10,15 @@
 
 namespace evoplex {
 
-QStringList LifeLike::parseCmd(const QString &cmd)
+QBitArray LifeLike::parseCmd(const QString &cmd)
 {
     if (cmd.isEmpty())
     {
         qWarning() << "The command cannot be empty";
-        return QStringList();
+        return QBitArray();
     }
     
+    QBitArray rules(18);
     QStringList _cmds;
     QString _cmd1, _cmd2;
     
@@ -27,7 +28,7 @@ QStringList LifeLike::parseCmd(const QString &cmd)
     if (cmd.indexOf("/") == -1)
     {
         qWarning() << "Commands must be of the form B{number of neighbors for cell birth} / S{number of neighbors for cell survival";
-        return QStringList();
+        return QBitArray();
     }
     
     _cmds = cmd.split("/");
@@ -35,7 +36,7 @@ QStringList LifeLike::parseCmd(const QString &cmd)
     if (!_cmds.at(0).startsWith("B") || !_cmds.at(1).startsWith("S"))
     {
         qWarning() << "Commands must be of the form B{number of neighbors for cell birth} / S{number of neighbors for cell survival";
-        return QStringList();
+        return QBitArray();
     }
 
     _cmd1 = _cmds.at(0);
@@ -43,22 +44,34 @@ QStringList LifeLike::parseCmd(const QString &cmd)
     _cmd2 = _cmds.at(1);
     _cmd2.remove(0, 1);
     
-    int intRule1 = _cmd2.toInt(&isInt1);
-    int intRule2 = _cmd1.toInt(&isInt2);
+    int intRule1 = _cmd1.toInt(&isInt1);
+    int intRule2 = _cmd2.toInt(&isInt2);
     
-    // check if rules are integers
-    if (!isInt1 || !isInt2)
+    // check if rules are integers or empty 
+    if (!(isInt1 || _cmd1.isEmpty()) || !(isInt2 || _cmd2.isEmpty()))
     {
         qWarning() << "Unable to parse command. Make sure you give a valid integer.";
-        return QStringList();
+        return QBitArray();
     }
-    // check if the rulestring has unique integers
-    if (QSet<QString>::fromList(_cmd1.split("")).count() != _cmd1.size() + 1 || QSet<QString>::fromList(_cmd2.split("")).count() != _cmd2.size() + 1)
+    
+    // convert rule to a bitstream 
+    for (const auto& c : _cmd1)
     {
-        qWarning() << "Integers can't appear more than once on each rule.";
-        return QStringList();
+        if (rules[c.digitValue() + 0x0A]){
+            qWarning() << "Rulestring should contain only unique integers.";
+            return QBitArray();
+        }
+        rules.setBit(c.digitValue() + 0x0A);
     }
-    return QStringList() << _cmd1 << _cmd2;
+    for (const auto& c: _cmd2)
+    {
+        if (rules[c.digitValue()]){
+            qWarning() << "Rulestring should contain only unique integers.";
+            return QBitArray();
+        }
+        rules.setBit(c.digitValue());
+    }
+    return rules;
 }
 
 bool LifeLike::init()
@@ -77,7 +90,7 @@ bool LifeLike::init()
     
     m_rulesetLst = parseCmd(m_ruleset);
     
-    if (m_rulesetLst.isEmpty())
+    if (m_rulesetLst.isNull())
     {
         return false;
     }
@@ -101,11 +114,11 @@ bool LifeLike::algorithmStep()
         if (node.attr(m_liveAttrId).toBool()) {
             // If the node is alive, then it only survives if its number of neighbors is specified in the rulestring.
             // Otherwise, it dies from under/overpopulation
-                nextStates.emplace_back(m_rulesetLst.at(1).contains(QString::number(liveNeighbourCount)));
+               nextStates.emplace_back(m_rulesetLst[liveNeighbourCount]);
         } else {
             // Any dead cell can become alive if its number of neighbors matches the one specified in the rulestring.
             // Otherwise, it remains dead.
-            nextStates.emplace_back(m_rulesetLst.at(0).contains(QString::number(liveNeighbourCount)));
+            nextStates.emplace_back(m_rulesetLst[liveNeighbourCount + 0x0A]);
         }
     }
     // For each node, load the next state into the current state
