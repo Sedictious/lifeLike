@@ -6,6 +6,9 @@
   "author": "Eleftheria Chatziargyriou",
   "description": "This implements life-like cellular automata.",
   "supportedGraphs": ["squareGrid"],
-  "pluginAttributesScope": [ {"rules": "string"} ],
+  "pluginAttributesScope": [
+    {"birth": "int[-1,max]"},
+    {"survival": "int[-1,max]"}
+  ],
   "nodeAttributesScope": [ {"live": "bool"} ]
 }

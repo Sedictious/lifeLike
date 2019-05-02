@@ -10,66 +10,41 @@
 
 namespace evoplex {
 
-QBitArray LifeLike::parseCmd(const QString &cmd)
+QBitArray LifeLike::parseCmd(const QString &cmd1, const QString &cmd2)
 {
-    if (cmd.isEmpty())
-    {
-        qWarning() << "The command cannot be empty";
-        return QBitArray();
-    }
-    
+    QString _cmd1 = cmd1;
+    QString _cmd2 = cmd2;
     QBitArray rules(18);
-    QStringList _cmds;
-    QString _cmd1, _cmd2;
-    
-    bool isInt1 = false;
-    bool isInt2 = false;
-    
-    if (cmd.indexOf("/") == -1)
-    {
-        qWarning() << "Commands must be of the form B{number of neighbors for cell birth} / S{number of neighbors for cell survival";
-        return QBitArray();
-    }
-    
-    _cmds = cmd.split("/");
-    
-    if (!_cmds.at(0).startsWith("B") || !_cmds.at(1).startsWith("S"))
-    {
-        qWarning() << "Commands must be of the form B{number of neighbors for cell birth} / S{number of neighbors for cell survival";
-        return QBitArray();
-    }
 
-    _cmd1 = _cmds.at(0);
-    _cmd1.remove(0, 1);
-    _cmd2 = _cmds.at(1);
-    _cmd2.remove(0, 1);
-    
-    int intRule1 = _cmd1.toInt(&isInt1);
-    int intRule2 = _cmd2.toInt(&isInt2);
-    
-    // check if rules are integers or empty 
-    if (!(isInt1 || _cmd1.isEmpty()) || !(isInt2 || _cmd2.isEmpty()))
-    {
-        qWarning() << "Unable to parse command. Make sure you give a valid integer.";
-        return QBitArray();
-    }
+    int intRule1 = _cmd1.toInt();
+    int intRule2 = _cmd2.toInt();
     
     // convert rule to a bitstream 
-    for (const auto& c : _cmd1)
+    
+    // Check if either of the commands should be empty (input of -1)
+    // before iterating.
+    if (intRule1 != -1)
     {
-        if (rules[c.digitValue() + 0x0A]){
-            qWarning() << "Rulestring should contain only unique integers.";
-            return QBitArray();
+        for (const auto& c : _cmd1)
+        {
+            if (rules[c.digitValue() + 0x0A]){
+                qWarning() << "Rulestring should contain only unique integers.";
+                return QBitArray();
+            }
+            rules.setBit(c.digitValue() + 0x0A);
         }
-        rules.setBit(c.digitValue() + 0x0A);
     }
-    for (const auto& c: _cmd2)
+    
+    if (intRule2 != -1)
     {
-        if (rules[c.digitValue()]){
-            qWarning() << "Rulestring should contain only unique integers.";
-            return QBitArray();
+        for (const auto& c: _cmd2)
+        {
+            if (rules[c.digitValue()]){
+                qWarning() << "Rulestring should contain only unique integers.";
+                return QBitArray();
+            }
+            rules.setBit(c.digitValue());
         }
-        rules.setBit(c.digitValue());
     }
     return rules;
 }
@@ -80,15 +55,16 @@ bool LifeLike::init()
     m_liveAttrId = node(0).attrs().indexOf("live");
    
     // parses the ruleset    
-    if (attrExists("rules")){
-        m_ruleset = attr("rules").toQString();
+    if (attrExists("birth") && attrExists("survival")){
+        m_birth = attr("birth").toQString();
+        m_survival = attr("survival").toQString();
     }
     else{
         qWarning() << "missing attributes.";
         return false;
     }
     
-    m_rulesetLst = parseCmd(m_ruleset);
+    m_rulesetLst = parseCmd(m_birth, m_survival);
     
     if (m_rulesetLst.isNull())
     {
