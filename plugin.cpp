@@ -10,42 +10,32 @@
 
 namespace evoplex {
 
-QBitArray LifeLike::parseCmd(const QString &cmd1, const QString &cmd2)
+QBitArray LifeLike::parseCmd(const int cmd)
 {
-    QString _cmd1 = cmd1;
-    QString _cmd2 = cmd2;
-    QBitArray rules(18);
+    int _cmd = cmd;
 
-    int intRule1 = _cmd1.toInt();
-    int intRule2 = _cmd2.toInt();
+    QBitArray rules(10);
     
     // convert rule to a bitstream 
     
-    // Check if either of the commands should be empty (input of -1)
+    // Check the command should be empty (input of -1)
     // before iterating.
-    if (intRule1 != -1)
+    if (_cmd != -1)
     {
-        for (const auto& c : _cmd1)
-        {
-            if (rules[c.digitValue() + 0x0A]){
+        int c;
+        
+        do
+        { 
+            c = _cmd%10;
+            if (rules[c]){
                 qWarning() << "Rulestring should contain only unique integers.";
                 return QBitArray();
             }
-            rules.setBit(c.digitValue() + 0x0A);
-        }
+            rules.setBit(c);
+            _cmd /= 10;
+        } while(_cmd);
     }
     
-    if (intRule2 != -1)
-    {
-        for (const auto& c: _cmd2)
-        {
-            if (rules[c.digitValue()]){
-                qWarning() << "Rulestring should contain only unique integers.";
-                return QBitArray();
-            }
-            rules.setBit(c.digitValue());
-        }
-    }
     return rules;
 }
 
@@ -54,19 +44,23 @@ bool LifeLike::init()
     // gets the id of the `live` node's attribute, which is the same for all nodes
     m_liveAttrId = node(0).attrs().indexOf("live");
    
+   int _birth;
+   int _survival;
+   
     // parses the ruleset    
     if (attrExists("birth") && attrExists("survival")){
-        m_birth = attr("birth").toQString();
-        m_survival = attr("survival").toQString();
+        _birth = attr("birth").toInt();
+        _survival = attr("survival").toInt();
     }
     else{
         qWarning() << "missing attributes.";
         return false;
     }
     
-    m_rulesetLst = parseCmd(m_birth, m_survival);
+    m_birthLst = parseCmd(_birth);
+    m_survivalLst = parseCmd(_survival);
     
-    if (m_rulesetLst.isNull())
+    if (m_birthLst.isNull() || m_survivalLst.isNull())
     {
         return false;
     }
@@ -90,11 +84,11 @@ bool LifeLike::algorithmStep()
         if (node.attr(m_liveAttrId).toBool()) {
             // If the node is alive, then it only survives if its number of neighbors is specified in the rulestring.
             // Otherwise, it dies from under/overpopulation
-               nextStates.emplace_back(m_rulesetLst[liveNeighbourCount]);
+               nextStates.emplace_back(m_survivalLst[liveNeighbourCount]);
         } else {
             // Any dead cell can become alive if its number of neighbors matches the one specified in the rulestring.
             // Otherwise, it remains dead.
-            nextStates.emplace_back(m_rulesetLst[liveNeighbourCount + 0x0A]);
+            nextStates.emplace_back(m_birthLst[liveNeighbourCount]);
         }
     }
     // For each node, load the next state into the current state

@@ -19,13 +19,12 @@ class LifeLike: public AbstractModel
 public:
     bool init() override;
     bool algorithmStep() override;
-    QBitArray parseCmd(const QString &cmd1, const QString &cmd2);
+    QBitArray parseCmd(int cmd1);
 
 private:
     int m_liveAttrId;  // the id of the 'live' node's attribute
-    QString m_birth; // neighbours needed for cell birth
-    QString m_survival; //neighbours needed for cell survival
-    QBitArray m_rulesetLst; // the bitstream representing the input ruleset
+    QBitArray m_birthLst; // the bitstream representing the neighbours needed for cell birth
+    QBitArray m_survivalLst; // the bitstream representing the neighbours needed for cell survival
 };
 } // evoplex
 #endif // LIFELIKE_H
