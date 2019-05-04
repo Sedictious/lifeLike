@@ -10,30 +10,34 @@
 
 namespace evoplex {
 
-QBitArray LifeLike::parseCmd(const int cmd)
+QBitArray LifeLike::ruleToBitArray(int cmd) const
 {
-    int _cmd = cmd;
 
-    QBitArray rules(10);
+    QBitArray rules(9);
     
     // convert rule to a bitstream 
     
     // Check the command should be empty (input of -1)
     // before iterating.
-    if (_cmd != -1)
+    if (cmd != -1)
     {
         int c;
         
         do
         { 
-            c = _cmd%10;
+            c = cmd%10;
+            
+            if (c == 9) {
+                qWarning() << "Command should contain only valid integers (0-8).";
+                return QBitArray();
+            }
             if (rules[c]){
                 qWarning() << "Rulestring should contain only unique integers.";
                 return QBitArray();
             }
             rules.setBit(c);
-            _cmd /= 10;
-        } while(_cmd);
+            cmd /= 10;
+        } while(cmd);
     }
     
     return rules;
@@ -44,28 +48,16 @@ bool LifeLike::init()
     // gets the id of the `live` node's attribute, which is the same for all nodes
     m_liveAttrId = node(0).attrs().indexOf("live");
    
-   int _birth;
-   int _survival;
-   
     // parses the ruleset    
-    if (attrExists("birth") && attrExists("survival")){
-        _birth = attr("birth").toInt();
-        _survival = attr("survival").toInt();
-    }
-    else{
+    if (attrExists("birth") && attrExists("survival")) {
+        m_birthLst = ruleToBitArray(attr("birth").toInt());
+        m_survivalLst = ruleToBitArray(attr("survival").toInt());
+    } else{
         qWarning() << "missing attributes.";
         return false;
     }
-    
-    m_birthLst = parseCmd(_birth);
-    m_survivalLst = parseCmd(_survival);
-    
-    if (m_birthLst.isNull() || m_survivalLst.isNull())
-    {
-        return false;
-    }
 
-    return m_liveAttrId >= 0;
+    return m_liveAttrId >= 0 && !m_birthLst.isNull() && !m_survivalLst.isNull();
 }
 
 bool LifeLike::algorithmStep()
@@ -75,7 +67,7 @@ bool LifeLike::algorithmStep()
 
     for (Node node : nodes()) {
         int liveNeighbourCount = 0;
-        for (Node neighbour : node.outEdges()){
+        for (Node neighbour : node.outEdges()) {
             if (neighbour.attr(m_liveAttrId).toBool()) {
                 ++liveNeighbourCount;
             }

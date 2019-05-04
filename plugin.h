@@ -19,7 +19,7 @@ class LifeLike: public AbstractModel
 public:
     bool init() override;
     bool algorithmStep() override;
-    QBitArray parseCmd(int cmd1);
+    QBitArray ruleToBitArray(int cmd) const;
 
 private:
     int m_liveAttrId;  // the id of the 'live' node's attribute
